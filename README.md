@@ -1,4 +1,4 @@
-# VPS Deploy
+# [DRAFT] VPS Deploy
 
 Automates VPS provisioning, hardening, and Docker app deployment.
 
@@ -92,31 +92,31 @@ bash steps/04_firewall.sh verify
 
 ## What Gets Skipped (By Design)
 
-| Skipped | Why |
-|---|---|
-| Step 1 (Provision VPS) | Done manually on your provider |
-| Step 10 (Restore backup) | Use `npm run backup` separately |
-| Step 11 (Credentials / .env) | Secrets are never automated |
-| Steps 14–21 (SSL, DNS, CI) | Do these after setup completes |
-| All testing steps | Verify manually |
+| Skipped                      | Why                             |
+| ---------------------------- | ------------------------------- |
+| Step 1 (Provision VPS)       | Done manually on your provider  |
+| Step 10 (Restore backup)     | Use `npm run backup` separately |
+| Step 11 (Credentials / .env) | Secrets are never automated     |
+| Steps 14–21 (SSL, DNS, CI)   | Do these after setup completes  |
+| All testing steps            | Verify manually                 |
 
 ---
 
 ## config.yml Reference
 
-| Key | Description |
-|---|---|
-| `vps_ip` | IP address of your VPS |
-| `root_password` | Root password (used once, then root login is disabled) |
-| `deployer_password` | Password for the `deployer` user |
-| `ssh_key_path` | Local path for the ED25519 key pair (`$HOME` is expanded) |
-| `github_repo` | Full HTTPS URL to your GitHub repo |
-| `app_dir_name` | Folder name after `git clone` |
-| `app_port` | Port your app exposes (reference only) |
-| `extra_ports` | Additional firewall ports (YAML list) |
-| `fail2ban_bantime` | Ban duration in seconds |
-| `fail2ban_findtime` | Window to count failures (seconds) |
-| `fail2ban_maxretry` | Attempts before ban |
+| Key                 | Description                                               |
+| ------------------- | --------------------------------------------------------- |
+| `vps_ip`            | IP address of your VPS                                    |
+| `root_password`     | Root password (used once, then root login is disabled)    |
+| `deployer_password` | Password for the `deployer` user                          |
+| `ssh_key_path`      | Local path for the ED25519 key pair (`$HOME` is expanded) |
+| `github_repo`       | Full HTTPS URL to your GitHub repo                        |
+| `app_dir_name`      | Folder name after `git clone`                             |
+| `app_port`          | Port your app exposes (reference only)                    |
+| `extra_ports`       | Additional firewall ports (YAML list)                     |
+| `fail2ban_bantime`  | Ban duration in seconds                                   |
+| `fail2ban_findtime` | Window to count failures (seconds)                        |
+| `fail2ban_maxretry` | Attempts before ban                                       |
 
 ---
 
@@ -133,4 +133,5 @@ bash steps/04_firewall.sh verify
 - **errors.txt** — only lines for steps that actually failed.
 - **deploy.log** — full timestamped output of every command.
 - Run any sub-step manually: `bash steps/<file>.sh <sub-step-name>`
+
 # vps-starter
