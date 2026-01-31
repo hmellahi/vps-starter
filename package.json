@@ -1,0 +1,13 @@
+{
+  "name": "vps-deploy",
+  "version": "1.0.0",
+  "description": "VPS setup & deploy automation",
+  "private": true,
+  "scripts": {
+    "setup": "node setup.js",
+    "backup": "node backup.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
