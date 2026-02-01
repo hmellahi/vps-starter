@@ -195,31 +195,31 @@ const SECTIONS = [
       },
     ],
   },
-  {
-    title: "STEP 13 — Start App (Docker Compose)",
-    steps: [
-      {
-        label: "Verify docker-compose.yml",
-        script: "13_docker_compose.sh",
-        fn: "verify_compose_file",
-      },
-      {
-        label: "Build & start containers",
-        script: "13_docker_compose.sh",
-        fn: "build_and_up",
-      },
-      {
-        label: "Show container status",
-        script: "13_docker_compose.sh",
-        fn: "show_status",
-      },
-      {
-        label: "Show recent container logs",
-        script: "13_docker_compose.sh",
-        fn: "show_logs",
-      },
-    ],
-  },
+  // {
+  //   title: "STEP 13 — Start App (Docker Compose)",
+  //   steps: [
+  //     {
+  //       label: "Verify docker-compose.yml",
+  //       script: "13_docker_compose.sh",
+  //       fn: "verify_compose_file",
+  //     },
+  //     {
+  //       label: "Build & start containers",
+  //       script: "13_docker_compose.sh",
+  //       fn: "build_and_up",
+  //     },
+  //     {
+  //       label: "Show container status",
+  //       script: "13_docker_compose.sh",
+  //       fn: "show_status",
+  //     },
+  //     {
+  //       label: "Show recent container logs",
+  //       script: "13_docker_compose.sh",
+  //       fn: "show_logs",
+  //     },
+  //   ],
+  // },
 ];
 
 // ─── preflight ──────────────────────────────────────────────────────────────
