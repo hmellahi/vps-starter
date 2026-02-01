@@ -5,8 +5,20 @@
 # ────────────────────────────────────────────────────────────
 set -euo pipefail
 
-VPS_IP=$(grep -m1 "^vps_ip:" "$(dirname "$0")/../config.yml" | sed 's/^[^:]*: *//;s/"//g')
-ROOT_PASS=$(grep -m1 "^root_password:" "$(dirname "$0")/../config.yml" | sed 's/^[^:]*: *//;s/"//g')
+# Load .env file
+ENV_FILE="$(dirname "$0")/../.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "❌ .env file not found! Copy .env.example to .env first." >&2
+  exit 1
+fi
+
+# Parse .env (ignore comments and empty lines)
+get_env() {
+  grep "^$1=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^["'\'']\(.*\)["'\'']$/\1/' | sed "s|\$HOME|$HOME|"
+}
+
+VPS_IP=$(get_env "VPS_IP")
+ROOT_PASS=$(get_env "ROOT_PASSWORD")
 
 ssh_root() {
   sshpass -p"$ROOT_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@"$VPS_IP" "$@"
@@ -35,7 +47,7 @@ enable_passwordless_sudo() {
 install_ssh_key() {
   # Get the SSH key path and read the public key
   local key_path
-  key_path=$(grep -m1 "^ssh_key_path:" "$(dirname "$0")/../config.yml" | sed 's/^[^:]*: *//;s/"//g' | sed "s|\$HOME|$HOME|")
+  key_path=$(get_env "SSH_KEY_PATH")
   local pub_key
   pub_key=$(cat "${key_path}.pub")
   

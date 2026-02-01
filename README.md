@@ -9,16 +9,14 @@ Automates VPS provisioning, hardening, and Docker app deployment.
 ## Quick Start
 
 ```bash
-# 1. Install dependencies (js-yaml is the only one)
-npm install
+# 1. Copy .env.example to .env and fill in your values
+cp .env.example .env
+nano .env
 
-# 2. Edit config.yml — fill in your values
-nano config.yml
-
-# 3. Run setup (Steps 2 → 13)
+# 2. Run setup (Steps 2 → 13)
 npm run setup
 
-# 4. SSH in and populate .env
+# 3. SSH in and populate your app's .env
 ssh -i ~/.ssh/vps_deploy_ed25519 deployer@<VPS_IP>
 nano /home/deployer/<app_dir>/.env
 docker compose restart
@@ -34,16 +32,17 @@ npm run backup
 ```
 vps-deploy/
 ├── package.json
-├── config.yml                  ← all your settings
-├── setup.js                    ← setup orchestrator (Steps 2–13)
-├── backup.js                   ← backup orchestrator
-├── src/                        ← JS internals
-│   ├── config.js               ← YAML loader + validation
-│   ├── logger.js               ← writes deploy.log + errors.txt
-│   ├── ui.js                   ← terminal rendering (spinners, boxes, summary)
-│   ├── ssh.js                  ← sshRoot / sshDeploy / sshSudo / scpPull
-│   └── runner.js               ← runStep() / runSection() core loop
-├── steps/                      ← pure bash, one file per step
+├── .env.example               ← template for configuration
+├── .env                       ← your actual config (gitignored)
+├── setup.js                   ← setup orchestrator (Steps 2–13)
+├── backup.js                  ← backup orchestrator
+├── src/                       ← JS internals
+│   ├── config.js              ← .env loader + validation
+│   ├── logger.js              ← writes deploy.log + errors.txt
+│   ├── ui.js                  ← terminal rendering (spinners, boxes, summary)
+│   ├── ssh.js                 ← sshRoot / sshDeploy / sshSudo / scpPull
+│   └── runner.js              ← runStep() / runSection() core loop
+├── steps/                     ← pure bash, one file per step
 │   ├── 02_initial_setup.sh
 │   ├── 03_ssh_keys.sh
 │   ├── 04_firewall.sh
@@ -53,10 +52,10 @@ vps-deploy/
 │   ├── 08_docker.sh
 │   ├── 12_deploy_code.sh
 │   └── 13_docker_compose.sh
-├── backups/                    ← created by backup.js
+├── backups/                   ← created by backup.js
 │   └── 2025-01-31T14-30-22/   ← timestamped snapshots
-├── deploy.log                  ← full run log (runtime)
-└── errors.txt                  ← only failed steps (runtime)
+├── deploy.log                 ← full run log (runtime)
+└── errors.txt                 ← only failed steps (runtime)
 ```
 
 ---
@@ -102,20 +101,21 @@ bash steps/04_firewall.sh verify
 
 ---
 
-## config.yml Reference
+## .env Reference
 
-| Key                 | Description                                               |
-| ------------------- | --------------------------------------------------------- |
-| `vps_ip`            | IP address of your VPS                                    |
-| `root_password`     | Root password (used once, then root login is disabled)    |
-| `ssh_key_path`      | Local path for the ED25519 key pair (`$HOME` is expanded) |
-| `github_repo`       | Full HTTPS URL to your GitHub repo                        |
-| `app_dir_name`      | Folder name after `git clone`                             |
-| `app_port`          | Port your app exposes (reference only)                    |
-| `extra_ports`       | Additional firewall ports (YAML list)                     |
-| `fail2ban_bantime`  | Ban duration in seconds                                   |
-| `fail2ban_findtime` | Window to count failures (seconds)                        |
-| `fail2ban_maxretry` | Attempts before ban                                       |
+| Key                   | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `VPS_IP`              | IP address of your VPS                                    |
+| `ROOT_PASSWORD`       | Root password (used once, then root login is disabled)    |
+| `SSH_KEY_PATH`        | Local path for the ED25519 key pair (`$HOME` is expanded) |
+| `GITHUB_REPO`         | Full HTTPS URL to your GitHub repo                        |
+| `GITHUB_TOKEN`        | GitHub personal access token for private repos (optional) |
+| `APP_DIR_NAME`        | Folder name after `git clone`                             |
+| `APP_PORT`            | Port your app exposes (reference only)                    |
+| `EXTRA_PORTS`         | Comma-separated additional firewall ports (e.g., `8080,5432`) |
+| `FAIL2BAN_BANTIME`    | Ban duration in seconds                                   |
+| `FAIL2BAN_FINDTIME`   | Window to count failures (seconds)                        |
+| `FAIL2BAN_MAXRETRY`   | Attempts before ban                                       |
 
 ---
 

@@ -4,10 +4,15 @@
 # ────────────────────────────────────────────────────────────
 set -euo pipefail
 
-CFG="$(dirname "$0")/../config.yml"
-VPS_IP=$(grep -m1 "^vps_ip:" "$CFG" | sed 's/^[^:]*: *//;s/"//g')
-KEY_PATH=$(grep -m1 "^ssh_key_path:" "$CFG" | sed 's/^[^:]*: *//;s/"//g' | sed "s|\$HOME|$HOME|")
-APP_DIR=$(grep -m1 "^app_dir_name:" "$CFG" | sed 's/^[^:]*: *//;s/"//g')
+# Load .env file
+ENV_FILE="$(dirname "$0")/../.env"
+get_env() {
+  grep "^$1=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^["'\'']\(.*\)["'\'']$/\1/' | sed "s|\$HOME|$HOME|"
+}
+
+VPS_IP=$(get_env "VPS_IP")
+KEY_PATH=$(get_env "SSH_KEY_PATH")
+APP_DIR=$(get_env "APP_DIR_NAME")
 REMOTE_APP="/home/deployer/${APP_DIR}"
 
 ssh_deploy() {

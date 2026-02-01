@@ -1,3 +1,7 @@
+# Environment files
 .env
+.env.*
+!.env.example
 
+# Legacy config
 config.yml

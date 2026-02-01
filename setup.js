@@ -4,13 +4,12 @@
 //
 //  Usage:  node setup.js   (or  npm run setup)
 //
-//  Reads config.yml → runs preflight → executes Steps 2–13
+//  Reads .env → runs preflight → executes Steps 2–13
 //  via the bash files in steps/. All UI lives here in JS;
 //  the bash files are pure command runners.
 // ============================================================
 
 const { execSync } = require("child_process");
-const path = require("path");
 const config = require("./src/config");
 const logger = require("./src/logger");
 const ui = require("./src/ui");
@@ -252,7 +251,7 @@ function preflight(cfg) {
   // 3. missing config fields
   if (cfg._missing && cfg._missing.length > 0) {
     for (const key of cfg._missing) {
-      ui.printPreflightFail(`config.yml → ${key}`, "not filled in");
+      ui.printPreflightFail(`.env → ${key}`, "not filled in");
     }
     ok = false;
   } else {

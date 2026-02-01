@@ -7,7 +7,5 @@
     "setup": "node setup.js",
     "backup": "node backup.js"
   },
-  "dependencies": {
-    "js-yaml": "^4.1.0"
-  }
+  "dependencies": {}
 }

@@ -4,9 +4,14 @@
 # ────────────────────────────────────────────────────────────
 set -euo pipefail
 
-CFG="$(dirname "$0")/../config.yml"
-VPS_IP=$(grep -m1 "^vps_ip:" "$CFG" | sed 's/^[^:]*: *//;s/"//g')
-KEY_PATH=$(grep -m1 "^ssh_key_path:" "$CFG" | sed 's/^[^:]*: *//;s/"//g' | sed "s|\$HOME|$HOME|")
+# Load .env file
+ENV_FILE="$(dirname "$0")/../.env"
+get_env() {
+  grep "^$1=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^["'\'']\(.*\)["'\'']$/\1/' | sed "s|\$HOME|$HOME|"
+}
+
+VPS_IP=$(get_env "VPS_IP")
+KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
@@ -27,18 +32,23 @@ allow_core() {
 }
 
 allow_extra() {
-  # Pull extra_ports list out of the YAML (handles both inline [] and block list)
-  local ports
-  ports=$(sed -n '/^extra_ports:/,/^[^ ]/p' "$CFG" | grep '^\s*-' | sed 's/.*- *//')
-
-  if [[ -z "$ports" ]]; then
+  # Get extra ports from .env (comma-separated)
+  local extra_ports
+  extra_ports=$(get_env "EXTRA_PORTS" || echo "")
+  
+  if [[ -z "$extra_ports" ]]; then
     echo "No extra ports configured"
     exit 0
   fi
 
-  for port in $ports; do
-    ssh_sudo ufw allow "${port}/tcp"
-    echo "Allowed port $port"
+  # Split by comma and allow each port
+  IFS=',' read -ra ports <<< "$extra_ports"
+  for port in "${ports[@]}"; do
+    port=$(echo "$port" | xargs)  # trim whitespace
+    if [[ -n "$port" ]]; then
+      ssh_sudo ufw allow "${port}/tcp"
+      echo "Allowed port $port"
+    fi
   done
 }
 

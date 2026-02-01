@@ -4,9 +4,14 @@
 # ────────────────────────────────────────────────────────────
 set -euo pipefail
 
-CFG="$(dirname "$0")/../config.yml"
-VPS_IP=$(grep -m1 "^vps_ip:" "$CFG" | sed 's/^[^:]*: *//;s/"//g')
-KEY_PATH=$(grep -m1 "^ssh_key_path:" "$CFG" | sed 's/^[^:]*: *//;s/"//g' | sed "s|\$HOME|$HOME|")
+# Load .env file
+ENV_FILE="$(dirname "$0")/../.env"
+get_env() {
+  grep "^$1=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^["'\'']\(.*\)["'\'']$/\1/' | sed "s|\$HOME|$HOME|"
+}
+
+VPS_IP=$(get_env "VPS_IP")
+KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
