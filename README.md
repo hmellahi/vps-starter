@@ -108,7 +108,6 @@ bash steps/04_firewall.sh verify
 | ------------------- | --------------------------------------------------------- |
 | `vps_ip`            | IP address of your VPS                                    |
 | `root_password`     | Root password (used once, then root login is disabled)    |
-| `deployer_password` | Password for the `deployer` user                          |
 | `ssh_key_path`      | Local path for the ED25519 key pair (`$HOME` is expanded) |
 | `github_repo`       | Full HTTPS URL to your GitHub repo                        |
 | `app_dir_name`      | Folder name after `git clone`                             |

@@ -6,10 +6,10 @@ const os   = require('os');
 const CONFIG_PATH = path.join(__dirname, '..', 'config.yml');
 
 // Fields the user must fill in before anything runs.
-const REQUIRED = ['vps_ip', 'root_password', 'deployer_password', 'github_repo', 'app_dir_name'];
+const REQUIRED = ['vps_ip', 'root_password', 'github_repo', 'app_dir_name'];
 
 // Placeholder values that count as "not filled in".
-const PLACEHOLDERS = ['YOUR_VPS_IP', 'YOUR_ROOT_PASSWORD', 'YOUR_DEPLOYER_PASSWORD', 'YOUR_USER'];
+const PLACEHOLDERS = ['YOUR_VPS_IP', 'YOUR_ROOT_PASSWORD', 'YOUR_USER'];
 
 function load() {
   const raw = fs.readFileSync(CONFIG_PATH, 'utf8');
