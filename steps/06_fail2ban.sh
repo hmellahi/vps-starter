@@ -15,7 +15,7 @@ KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    deployer@"$VPS_IP" sudo "$@"
+    root@"$VPS_IP" sudo "$@"
 }
 
 # ─── sub-steps ──────────────────────────────────────────────
@@ -46,7 +46,7 @@ write_jail() {
   findtime=$(get_env "FAIL2BAN_FINDTIME")
   maxretry=$(get_env "FAIL2BAN_MAXRETRY")
 
-  ssh_sudo bash -c "cat > /etc/fail2ban/jail.local <<EOF
+  ssh_sudo bash -c "cat > /etc/fail2ban/jail.local <<'JAIL_EOF'
 [DEFAULT]
 bantime  = ${bantime}
 findtime = ${findtime}
@@ -59,7 +59,13 @@ port     = ssh
 filter   = sshd
 logpath  = /var/log/auth.log
 maxretry = ${maxretry}
-EOF"
+JAIL_EOF
+"
+  
+  # Now replace the variables in the file
+  ssh_sudo sed -i "s/\${bantime}/${bantime}/" /etc/fail2ban/jail.local
+  ssh_sudo sed -i "s/\${findtime}/${findtime}/" /etc/fail2ban/jail.local
+  ssh_sudo sed -i "s/\${maxretry}/${maxretry}/g" /etc/fail2ban/jail.local
 }
 
 start() {

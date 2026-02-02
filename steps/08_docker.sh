@@ -15,7 +15,7 @@ KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    deployer@"$VPS_IP" sudo "$@"
+    root@"$VPS_IP" sudo "$@"
 }
 
 ssh_deploy() {
@@ -38,8 +38,19 @@ install() {
 }
 
 add_group() {
+  # Wait a moment for Docker to create the docker group
+  sleep 2
+  
+  # Check if docker group exists
+  local docker_group_exists=$(ssh_sudo "getent group docker >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$docker_group_exists" != "EXISTS" ]]; then
+    echo "Docker group doesn't exist, creating it..."
+    ssh_sudo groupadd docker || true
+  fi
+  
   # Check if deployer is already in docker group
-  local in_docker=$(ssh_deploy "groups | grep -q docker && echo 'YES' || echo 'NO'")
+  local in_docker=$(ssh_sudo "groups deployer | grep -q docker && echo 'YES' || echo 'NO'")
   
   if [[ "$in_docker" == "YES" ]]; then
     echo "User 'deployer' already in docker group — skipping"
@@ -50,12 +61,14 @@ add_group() {
 }
 
 verify_docker() {
-  # sg runs the command inside the docker group without a new login shell
-  ssh_deploy bash -c 'sg docker -c "docker version"'
+  # Use newgrp to activate the docker group for deployer
+  ssh_sudo -u deployer bash -c 'docker version' 2>/dev/null || \
+  ssh_deploy "sg docker -c 'docker version'"
 }
 
 verify_compose() {
-  ssh_deploy bash -c 'sg docker -c "docker compose version"'
+  ssh_sudo -u deployer bash -c 'docker compose version' 2>/dev/null || \
+  ssh_deploy "sg docker -c 'docker compose version'"
 }
 
 # ─── dispatch ───────────────────────────────────────────────

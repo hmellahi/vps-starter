@@ -19,9 +19,44 @@ get_env() {
 
 VPS_IP=$(get_env "VPS_IP")
 ROOT_PASS=$(get_env "ROOT_PASSWORD")
+SSH_KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_root() {
-  sshpass -p"$ROOT_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@"$VPS_IP" "$@"
+  local result
+  local exit_code
+  
+  # Use SSH key if provided, otherwise fall back to password
+  if [[ -n "$SSH_KEY_PATH" && -f "$SSH_KEY_PATH" ]]; then
+    result=$(ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes root@"$VPS_IP" "$@" 2>&1)
+    exit_code=$?
+  elif [[ -n "$ROOT_PASS" ]]; then
+    result=$(sshpass -p"$ROOT_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@"$VPS_IP" "$@" 2>&1)
+    exit_code=$?
+  else
+    echo "❌ Neither SSH_KEY_PATH nor ROOT_PASSWORD is configured!" >&2
+    exit 1
+  fi
+  
+  # Print the output
+  echo "$result"
+  
+  # If SSH failed, provide helpful error message
+  if [[ $exit_code -ne 0 ]]; then
+    if [[ -n "$SSH_KEY_PATH" ]]; then
+      echo "❌ SSH key authentication failed. Check that:" >&2
+      echo "   1. The key file exists: $SSH_KEY_PATH" >&2
+      echo "   2. The key is authorized on the VPS for root user" >&2
+      echo "   3. Test manually: ssh -i $SSH_KEY_PATH root@$VPS_IP" >&2
+    else
+      echo "❌ Password authentication failed. Check that:" >&2
+      echo "   1. ROOT_PASSWORD is correct in .env" >&2
+      echo "   2. Password authentication is enabled on the VPS" >&2
+      echo "   3. Root login is permitted on the VPS" >&2
+    fi
+    return $exit_code
+  fi
+  
+  return 0
 }
 
 # ─── sub-steps ──────────────────────────────────────────────

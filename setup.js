@@ -227,14 +227,40 @@ function preflight(cfg) {
   ui.printSection("Pre-Flight Checks");
   let ok = true;
 
-  // 1. sshpass
-  try {
-    execSync("command -v sshpass", { stdio: "pipe" });
-    ui.printPreflightOk("sshpass available");
-  } catch {
+  // 1. Check authentication method
+  const hasRootPassword =
+    cfg.root_password && cfg.root_password !== "your-root-password-here";
+  const hasRootSSHKey =
+    cfg.root_ssh_key && cfg.root_ssh_key !== "your-root-ssh-key-here";
+
+  if (hasRootSSHKey) {
+    // Using SSH key authentication
+    const fs = require("fs");
+    if (!fs.existsSync(cfg.root_ssh_key)) {
+      ui.printPreflightFail(
+        "SSH_KEY_PATH",
+        `file not found: ${cfg.root_ssh_key}`
+      );
+      ok = false;
+    } else {
+      ui.printPreflightOk(`Root SSH key: ${cfg.root_ssh_key}`);
+    }
+  } else if (hasRootPassword) {
+    // Using password authentication - need sshpass
+    try {
+      execSync("command -v sshpass", { stdio: "pipe" });
+      ui.printPreflightOk("sshpass available");
+    } catch {
+      ui.printPreflightFail(
+        "sshpass",
+        "not installed — run: brew install sshpass  OR  apt install sshpass"
+      );
+      ok = false;
+    }
+  } else {
     ui.printPreflightFail(
-      "sshpass",
-      "not installed — run: brew install sshpass  OR  apt install sshpass"
+      "Authentication",
+      "Set either ROOT_PASSWORD or SSH_KEY_PATH in .env"
     );
     ok = false;
   }

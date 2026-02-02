@@ -17,7 +17,7 @@ REMOTE_APP="/home/deployer/${APP_DIR}"
 
 ssh_deploy() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    deployer@"$VPS_IP" "$@"
+    root@"$VPS_IP" "$@"
 }
 
 # ─── sub-steps ──────────────────────────────────────────────

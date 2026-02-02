@@ -15,7 +15,7 @@ KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    deployer@"$VPS_IP" sudo "$@"
+    root@"$VPS_IP" "$@"
 }
 
 # ─── sub-steps ──────────────────────────────────────────────

@@ -15,7 +15,7 @@ KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    deployer@"$VPS_IP" sudo "$@"
+    root@"$VPS_IP" sudo "$@"
 }
 
 # ─── sub-steps ──────────────────────────────────────────────
@@ -45,7 +45,15 @@ validate() {
 }
 
 restart() {
-  ssh_sudo systemctl restart sshd
+  # Try both service names (sshd for RHEL/CentOS, ssh for Debian/Ubuntu)
+  if ssh_sudo systemctl restart ssh 2>/dev/null; then
+    return 0
+  elif ssh_sudo systemctl restart sshd 2>/dev/null; then
+    return 0
+  else
+    echo "Failed to restart SSH service (tried both 'ssh' and 'sshd')" >&2
+    return 1
+  fi
 }
 
 # ─── dispatch ───────────────────────────────────────────────
