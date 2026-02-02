@@ -9,3 +9,6 @@ config.yml
 .DS_Store
 
 errors.txt
+deploy.log
+
+FIXES_APPLIED.md

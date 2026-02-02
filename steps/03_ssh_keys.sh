@@ -25,7 +25,7 @@ generate_keypair() {
 
 verify_login() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
-    root@"$VPS_IP" "echo key_login_ok"
+    deployer@"$VPS_IP" "echo 'SSH key login successful'"
 }
 
 # ─── dispatch ───────────────────────────────────────────────

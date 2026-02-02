@@ -20,7 +20,7 @@ const { runSection } = require("./src/runner");
 
 const SECTIONS = [
   {
-    title: "STEP 2 — Initial Server Setup",
+    title: "STEP 1 — Initial Server Setup",
     steps: [
       {
         label: "Update system packages",
@@ -47,16 +47,16 @@ const SECTIONS = [
       //   script: "03_ssh_keys.sh",
       //   fn: "generate_keypair",
       // },
-      // {
-      //   label: "Install SSH key on server",
-      //   script: "02_initial_setup.sh",
-      //   fn: "install_ssh_key",
-      // },
-      // {
-      //   label: "Verify passwordless SSH login",
-      //   script: "03_ssh_keys.sh",
-      //   fn: "verify_login",
-      // },
+      {
+        label: "Install SSH key on server",
+        script: "02_initial_setup.sh",
+        fn: "install_ssh_key",
+      },
+      {
+        label: "Verify passwordless SSH login",
+        script: "03_ssh_keys.sh",
+        fn: "verify_login",
+      },
     ],
   },
   // {
@@ -68,7 +68,7 @@ const SECTIONS = [
   //   ],
   // },
   {
-    title: "STEP 4 — Firewall (UFW)",
+    title: "STEP 3 — Firewall (UFW)",
     steps: [
       {
         label: "Set default policies",
@@ -94,7 +94,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "STEP 5 — Harden SSH",
+    title: "STEP 4 — Harden SSH",
     steps: [
       {
         label: "Patch sshd_config",
@@ -114,7 +114,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "STEP 6 — Fail2Ban",
+    title: "STEP 5 — Fail2Ban",
     steps: [
       { label: "Install Fail2Ban", script: "06_fail2ban.sh", fn: "install" },
       {
@@ -135,7 +135,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "STEP 7 — Automatic Security Updates",
+    title: "STEP 6 — Automatic Security Updates",
     steps: [
       {
         label: "Install unattended-upgrades",
@@ -155,7 +155,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "STEP 8 — Docker",
+    title: "STEP 7 — Docker",
     steps: [
       { label: "Install Docker", script: "08_docker.sh", fn: "install" },
       {
@@ -176,7 +176,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "STEP 12 — Deploy Application Code",
+    title: "STEP 8 — Deploy Application Code",
     steps: [
       {
         label: "Clone / pull repository",

@@ -26,7 +26,12 @@ POSTGRES_PORT=$(get_env "POSTGRES_PORT")
 
 ssh_deploy() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    root@"$VPS_IP" "$@"
+    deployer@"$VPS_IP" "$@"
+}
+
+ssh_sudo() {
+  ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+    deployer@"$VPS_IP" sudo "$@"
 }
 
 # ─── sub-steps ──────────────────────────────────────────────
@@ -107,10 +112,10 @@ copy_env() {
 
   # Copy the processed .env file to the server
   scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
-    root@"$VPS_IP":/home/deployer/"${APP_DIR}"/.env
+    deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/.env
 
   scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
-    root@"$VPS_IP":/home/deployer/"${APP_DIR}"/app/.env
+    deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/app/.env
 
   # Clean up temp file
   rm -f "$temp_env"

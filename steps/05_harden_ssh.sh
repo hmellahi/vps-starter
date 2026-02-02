@@ -31,12 +31,12 @@ patch_config() {
   
   ssh_sudo bash -c '
     CONF=/etc/ssh/sshd_config
-    sed -i "s/^#*PermitRootLogin .*/PermitRootLogin no/"              "$CONF"
+    # sed -i "s/^#*PermitRootLogin .*/PermitRootLogin no/"              "$CONF"
     sed -i "s/^#*PasswordAuthentication .*/PasswordAuthentication no/" "$CONF"
     sed -i "s/^#*PubkeyAuthentication .*/PubkeyAuthentication yes/"   "$CONF"
     sed -i "s/^#*MaxAuthTries .*/MaxAuthTries 3/"                    "$CONF"
     sed -i "/^AllowUsers/d"                                          "$CONF"
-    echo "AllowUsers deployer" >> "$CONF"
+    # echo "AllowUsers deployer" >> "$CONF"
   '
 }
 
