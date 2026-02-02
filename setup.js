@@ -42,21 +42,21 @@ const SECTIONS = [
         script: "02_initial_setup.sh",
         fn: "enable_passwordless_sudo",
       },
-      {
-        label: "Generate SSH key pair",
-        script: "03_ssh_keys.sh",
-        fn: "generate_keypair",
-      },
-      {
-        label: "Install SSH key on server",
-        script: "02_initial_setup.sh",
-        fn: "install_ssh_key",
-      },
-      {
-        label: "Verify passwordless SSH login",
-        script: "03_ssh_keys.sh",
-        fn: "verify_login",
-      },
+      // {
+      //   label: "Generate SSH key pair",
+      //   script: "03_ssh_keys.sh",
+      //   fn: "generate_keypair",
+      // },
+      // {
+      //   label: "Install SSH key on server",
+      //   script: "02_initial_setup.sh",
+      //   fn: "install_ssh_key",
+      // },
+      // {
+      //   label: "Verify passwordless SSH login",
+      //   script: "03_ssh_keys.sh",
+      //   fn: "verify_login",
+      // },
     ],
   },
   // {
@@ -229,12 +229,12 @@ function preflight(cfg) {
 
   // 1. sshpass
   try {
-    execSync("which sshpass", { stdio: "pipe" });
+    execSync("command -v sshpass", { stdio: "pipe" });
     ui.printPreflightOk("sshpass available");
   } catch {
     ui.printPreflightFail(
       "sshpass",
-      "not installed — run: brew install sshpass  OR  apt install sshpass",
+      "not installed — run: brew install sshpass  OR  apt install sshpass"
     );
     ok = false;
   }

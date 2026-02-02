@@ -93,7 +93,7 @@ copy_env() {
 
   # Create a temporary file with substituted values
   local temp_env=$(mktemp)
-  
+
   # Process the template and replace variables
   while IFS= read -r line; do
     # Replace DATABASE_URL with actual values
@@ -109,9 +109,12 @@ copy_env() {
   scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
     deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/.env
 
+  scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
+    deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/app/.env
+
   # Clean up temp file
   rm -f "$temp_env"
-  
+
   echo "Copied and configured .env to server"
 }
 
@@ -132,7 +135,7 @@ set_env_permissions() {
 
   # Check if permissions are already correct (600)
   local perms=$(ssh_deploy stat -c '%a' "/home/deployer/${APP_DIR}/.env" 2>/dev/null || echo "000")
-  
+
   if [[ "$perms" == "600" ]]; then
     echo ".env permissions already set to 600 — skipping"
     return 0

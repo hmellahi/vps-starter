@@ -8,18 +8,8 @@ Automates VPS provisioning, hardening, and Docker app deployment.
 
 ## Quick Start
 
-```bash
-# 1. Copy .env.example to .env and fill in your values
-cp .env.example .env
-nano .env
-
-# 2. Run setup (Steps 2 → 13)
+# Run setup (Steps 2 → 13)
 npm run setup
-
-# 3. SSH in and populate your app's .env
-ssh -i ~/.ssh/vps_deploy_ed25519 deployer@<VPS_IP>
-nano /home/deployer/<app_dir>/.env
-docker compose restart
 
 # --- Backup (run anytime, completely independent) ---
 npm run backup
