@@ -21,10 +21,26 @@ ssh_sudo() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 install() {
+  # Check if fail2ban is already installed
+  local f2b_installed=$(ssh_sudo "command -v fail2ban-client >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$f2b_installed" == "EXISTS" ]]; then
+    echo "Fail2Ban already installed — skipping"
+    return 0
+  fi
+  
   ssh_sudo apt-get install -y -qq fail2ban
 }
 
 write_jail() {
+  # Check if jail.local already exists
+  local jail_exists=$(ssh_sudo "test -f /etc/fail2ban/jail.local && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$jail_exists" == "EXISTS" ]]; then
+    echo "Fail2Ban jail.local already configured — skipping"
+    return 0
+  fi
+  
   local bantime findtime maxretry
   bantime=$(get_env "FAIL2BAN_BANTIME")
   findtime=$(get_env "FAIL2BAN_FINDTIME")
@@ -47,6 +63,14 @@ EOF"
 }
 
 start() {
+  # Check if fail2ban is already active
+  local f2b_active=$(ssh_sudo systemctl is-active fail2ban 2>/dev/null || echo "inactive")
+  
+  if [[ "$f2b_active" == "active" ]]; then
+    echo "Fail2Ban already running — skipping"
+    return 0
+  fi
+  
   ssh_sudo systemctl enable fail2ban
   ssh_sudo systemctl start fail2ban
 }

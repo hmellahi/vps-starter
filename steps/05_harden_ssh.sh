@@ -21,6 +21,14 @@ ssh_sudo() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 patch_config() {
+  # Check if SSH is already hardened by checking PermitRootLogin
+  local already_hardened=$(ssh_sudo grep -q "^PermitRootLogin no" /etc/ssh/sshd_config && echo "YES" || echo "NO")
+  
+  if [[ "$already_hardened" == "YES" ]]; then
+    echo "SSH config already hardened — skipping"
+    return 0
+  fi
+  
   ssh_sudo bash -c '
     CONF=/etc/ssh/sshd_config
     sed -i "s/^#*PermitRootLogin .*/PermitRootLogin no/"              "$CONF"

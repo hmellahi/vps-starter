@@ -26,10 +26,26 @@ ssh_deploy() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 install() {
+  # Check if Docker is already installed
+  local docker_installed=$(ssh_deploy "command -v docker >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$docker_installed" == "EXISTS" ]]; then
+    echo "Docker already installed — skipping"
+    return 0
+  fi
+  
   ssh_sudo bash -c 'curl -fsSL https://get.docker.com | bash'
 }
 
 add_group() {
+  # Check if deployer is already in docker group
+  local in_docker=$(ssh_deploy "groups | grep -q docker && echo 'YES' || echo 'NO'")
+  
+  if [[ "$in_docker" == "YES" ]]; then
+    echo "User 'deployer' already in docker group — skipping"
+    return 0
+  fi
+  
   ssh_sudo usermod -aG docker deployer
 }
 

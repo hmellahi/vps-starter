@@ -184,9 +184,9 @@ const SECTIONS = [
         fn: "clone_repo",
       },
       {
-        label: "Scaffold .env file",
+        label: "Copy & configure .env file",
         script: "12_deploy_code.sh",
-        fn: "scaffold_env",
+        fn: "copy_env",
       },
       {
         label: "Set .env permissions (600)",

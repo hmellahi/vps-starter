@@ -53,6 +53,14 @@ allow_extra() {
 }
 
 enable() {
+  # Check if UFW is already enabled
+  local ufw_status=$(ssh_sudo ufw status | grep -q "Status: active" && echo "ACTIVE" || echo "INACTIVE")
+  
+  if [[ "$ufw_status" == "ACTIVE" ]]; then
+    echo "UFW already enabled — skipping"
+    return 0
+  fi
+  
   ssh_sudo bash -c 'echo "y" | ufw enable'
 }
 

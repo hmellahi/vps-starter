@@ -21,10 +21,26 @@ ssh_sudo() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 install() {
+  # Check if unattended-upgrades is already installed
+  local uu_installed=$(ssh_sudo "dpkg -l | grep -q unattended-upgrades && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$uu_installed" == "EXISTS" ]]; then
+    echo "unattended-upgrades already installed — skipping"
+    return 0
+  fi
+  
   ssh_sudo apt-get install -y -qq unattended-upgrades
 }
 
 enable() {
+  # Check if auto-upgrade config already exists
+  local config_exists=$(ssh_sudo "test -f /etc/apt/apt.conf.d/20auto-upgrade && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$config_exists" == "EXISTS" ]]; then
+    echo "Auto-upgrade already configured — skipping"
+    return 0
+  fi
+  
   ssh_sudo bash -c 'cat > /etc/apt/apt.conf.d/20auto-upgrade <<EOF
 Acquire::http::Download-Limit "1M";
 Acquire::http::Dl-Limit "50";

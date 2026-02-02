@@ -31,15 +31,39 @@ update_system() {
 }
 
 create_deployer() {
+  # Check if deployer user already exists
+  local user_exists=$(ssh_root "id -u deployer >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$user_exists" == "EXISTS" ]]; then
+    echo "User 'deployer' already exists — skipping"
+    return 0
+  fi
+  
   # Create deployer user without password (will use SSH keys only)
-  ssh_root "useradd -m -s /bin/bash deployer || true"
+  ssh_root "useradd -m -s /bin/bash deployer"
 }
 
 add_sudo() {
+  # Check if deployer is already in sudo group
+  local in_sudo=$(ssh_root "groups deployer | grep -q sudo && echo 'YES' || echo 'NO'")
+  
+  if [[ "$in_sudo" == "YES" ]]; then
+    echo "User 'deployer' already in sudo group — skipping"
+    return 0
+  fi
+  
   ssh_root "usermod -aG sudo deployer"
 }
 
 enable_passwordless_sudo() {
+  # Check if passwordless sudo is already configured
+  local sudo_configured=$(ssh_root "test -f /etc/sudoers.d/deployer && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$sudo_configured" == "EXISTS" ]]; then
+    echo "Passwordless sudo already configured — skipping"
+    return 0
+  fi
+  
   # Allow deployer to use sudo without password - secure for automation
   ssh_root "echo 'deployer ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/deployer && chmod 440 /etc/sudoers.d/deployer"
 }
@@ -50,6 +74,14 @@ install_ssh_key() {
   key_path=$(get_env "SSH_KEY_PATH")
   local pub_key
   pub_key=$(cat "${key_path}.pub")
+  
+  # Check if the key is already installed
+  local key_installed=$(ssh_root "grep -q '$pub_key' /home/deployer/.ssh/authorized_keys 2>/dev/null && echo 'EXISTS' || echo 'NOT_EXISTS'")
+  
+  if [[ "$key_installed" == "EXISTS" ]]; then
+    echo "SSH key already installed — skipping"
+    return 0
+  fi
   
   # Install the public key directly as root (no password needed!)
   ssh_root "mkdir -p /home/deployer/.ssh && \
