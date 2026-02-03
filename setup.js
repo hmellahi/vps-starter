@@ -328,7 +328,7 @@ async function main() {
   const results = [];
 
   // skip first 7 steps
-  SECTIONS.splice(0, 8);
+  SECTIONS.splice(0, 6);
 
   for (const section of SECTIONS) {
     const result = await runSection(section);

@@ -6,7 +6,10 @@ set -euo pipefail
 
 # Load .env file
 ENV_FILE="$(dirname "$0")/../.env"
-LOCAL_ENV_TEMPLATE="$(dirname "$0")/../src/app/.env.example"
+LOCAL_APP_ENV_DIR="$(dirname "$0")/../src/app"
+# Use actual .env if it exists (with real values), otherwise fall back to .env.example template
+LOCAL_ENV_TEMPLATE="$LOCAL_APP_ENV_DIR/.env"
+[[ -f "$LOCAL_APP_ENV_DIR/.env" ]] || LOCAL_ENV_TEMPLATE="$LOCAL_APP_ENV_DIR/.env.example"
 
 get_env() {
   grep "^$1=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^["'\'']\(.*\)["'\'']$/\1/' | sed "s|\$HOME|$HOME|"
@@ -88,60 +91,28 @@ clone_repo() {
 }
 
 copy_env() {
-  # Check if .env already exists on server
-  local env_exists=$(ssh_deploy bash -c "
-    if [[ -f /home/deployer/${APP_DIR}/.env ]]; then
-      echo 'EXISTS'
-    else
-      echo 'NOT_EXISTS'
-    fi
-  " 2>/dev/null || echo "NOT_EXISTS")
-
-  if [[ "$env_exists" == "EXISTS" ]]; then
-    echo ".env already exists on server — skipping"
-    return 0
-  fi
-
-  # Read the local .env.example template
+  # Need .env or .env.example in src/app to copy
   if [[ ! -f "$LOCAL_ENV_TEMPLATE" ]]; then
-    echo "ERROR: $LOCAL_ENV_TEMPLATE not found locally" >&2
+    echo "ERROR: No .env found. Add src/app/.env (with real values) or src/app/.env.example" >&2
     exit 1
   fi
 
-  # Create a temporary file with substituted values
-  local temp_env=$(mktemp)
-
-  # Process the template and replace variables
-  while IFS= read -r line; do
-    # Replace DATABASE_URL with actual values (if DB vars set)
-    if [[ "$line" =~ ^DATABASE_URL= ]]; then
-      if [[ -n "$POSTGRES_USER" && -n "$POSTGRES_DB" ]]; then
-        echo "DATABASE_URL=\"postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${VPS_IP}:${POSTGRES_PORT}/${POSTGRES_DB}\"" >> "$temp_env"
-      else
-        echo "$line" >> "$temp_env"
-      fi
-    else
-      echo "$line" >> "$temp_env"
-    fi
-  done < "$LOCAL_ENV_TEMPLATE"
-
-  # Copy the processed .env file to the server
-  scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
+  echo "Copying .env from: $LOCAL_ENV_TEMPLATE"
+  
+  # Copy the .env file directly to the server (with real values as-is)
+  scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$LOCAL_ENV_TEMPLATE" \
     deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/.env
 
-  scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$temp_env" \
+  scp -i "$KEY_PATH" -o StrictHostKeyChecking=no "$LOCAL_ENV_TEMPLATE" \
     deployer@"$VPS_IP":/home/deployer/"${APP_DIR}"/app/.env
 
-  # Clean up temp file
-  rm -f "$temp_env"
-
-  echo "Copied and configured .env to server"
+  echo "✓ Copied .env to server (from $(basename "$LOCAL_ENV_TEMPLATE"))"
 }
 
 set_env_permissions() {
   # Check if .env exists before setting permissions
   local env_exists=$(ssh_deploy bash -c "
-    if [[ -f /home/deployer/${APP_DIR}/.env ]]; then
+    if [[ -f /home/deployer/${APP_DIR}/.env && -f /home/deployer/${APP_DIR}/app/.env ]]; then
       echo 'EXISTS'
     else
       echo 'NOT_EXISTS'
