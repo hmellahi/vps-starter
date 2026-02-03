@@ -195,6 +195,26 @@ const SECTIONS = [
       },
     ],
   },
+  {
+    title: "STEP 9 — SSL Certificates (Let's Encrypt)",
+    steps: [
+      {
+        label: "Install certbot",
+        script: "11_ssl_certificates.sh",
+        fn: "install_certbot",
+      },
+      {
+        label: "Obtain primary certificate",
+        script: "11_ssl_certificates.sh",
+        fn: "obtain_primary_cert",
+      },
+      {
+        label: "Obtain additional certificate (if configured)",
+        script: "11_ssl_certificates.sh",
+        fn: "obtain_additional_cert",
+      },
+    ],
+  },
   // {
   //   title: "STEP 13 — Start App (Docker Compose)",
   //   steps: [
@@ -306,6 +326,9 @@ async function main() {
   }
 
   const results = [];
+
+  // skip first 7 steps
+  SECTIONS.splice(0, 7);
 
   for (const section of SECTIONS) {
     const result = await runSection(section);

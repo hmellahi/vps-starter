@@ -15,7 +15,7 @@ KEY_PATH=$(get_env "SSH_KEY_PATH")
 
 ssh_sudo() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-    root@"$VPS_IP" sudo "$@"
+    deployer@"$VPS_IP" sudo "$@"
 }
 
 ssh_deploy() {
@@ -26,15 +26,27 @@ ssh_deploy() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 install() {
-  # Check if Docker is already installed
-  local docker_installed=$(ssh_deploy "command -v docker >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_EXISTS'")
-  
-  if [[ "$docker_installed" == "EXISTS" ]]; then
+  # Check if Docker is already installed by trying to run it
+  if ssh_sudo docker --version >/dev/null 2>&1; then
     echo "Docker already installed — skipping"
     return 0
   fi
   
-  ssh_sudo bash -c 'curl -fsSL https://get.docker.com | bash'
+  # Install Docker (download script then run — avoids pipe/quoting issues over SSH)
+  echo "Installing Docker..."
+  ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
+    deployer@"$VPS_IP" 'sudo curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && sudo sh /tmp/get-docker.sh'
+  
+  # Wait for docker service to be ready
+  sleep 3
+  
+  # Verify installation succeeded
+  if ! ssh_sudo docker --version; then
+    echo "ERROR: Docker installation failed" >&2
+    return 1
+  fi
+  
+  echo "Docker installed successfully"
 }
 
 add_group() {
@@ -61,14 +73,13 @@ add_group() {
 }
 
 verify_docker() {
-  # Use newgrp to activate the docker group for deployer
-  ssh_sudo -u deployer bash -c 'docker version' 2>/dev/null || \
-  ssh_deploy "sg docker -c 'docker version'"
+  # Try with sudo (always works regardless of group membership)
+  ssh_sudo docker version
 }
 
 verify_compose() {
-  ssh_sudo -u deployer bash -c 'docker compose version' 2>/dev/null || \
-  ssh_deploy "sg docker -c 'docker compose version'"
+  # Try with sudo (always works regardless of group membership)
+  ssh_sudo docker compose version
 }
 
 # ─── dispatch ───────────────────────────────────────────────

@@ -16,13 +16,18 @@ VPS_IP=$(get_env "VPS_IP")
 KEY_PATH=$(get_env "SSH_KEY_PATH")
 REPO=$(get_env "GITHUB_REPO")
 APP_DIR=$(get_env "APP_DIR_NAME")
-GH_TOKEN=$(get_env "GITHUB_TOKEN" || echo "")
+GH_TOKEN=$(get_env "GITHUB_TOKEN" 2>/dev/null) || true
+GH_TOKEN=${GH_TOKEN:-}
 
-# Get DB credentials for .env substitution
-POSTGRES_DB=$(get_env "POSTGRES_DB")
-POSTGRES_USER=$(get_env "POSTGRES_USER")
-POSTGRES_PASSWORD=$(get_env "POSTGRES_PASSWORD")
-POSTGRES_PORT=$(get_env "POSTGRES_PORT")
+# DB credentials for .env substitution (optional — only needed for copy_env)
+POSTGRES_DB=$(get_env "POSTGRES_DB" 2>/dev/null) || true
+POSTGRES_USER=$(get_env "POSTGRES_USER" 2>/dev/null) || true
+POSTGRES_PASSWORD=$(get_env "POSTGRES_PASSWORD" 2>/dev/null) || true
+POSTGRES_PORT=$(get_env "POSTGRES_PORT" 2>/dev/null) || true
+POSTGRES_DB=${POSTGRES_DB:-}
+POSTGRES_USER=${POSTGRES_USER:-}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+POSTGRES_PORT=${POSTGRES_PORT:-5432}
 
 ssh_deploy() {
   ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
@@ -37,6 +42,12 @@ ssh_sudo() {
 # ─── sub-steps ──────────────────────────────────────────────
 
 clone_repo() {
+  if [[ -z "$REPO" || -z "$APP_DIR" ]] || [[ "$REPO" == *"your-username"* || "$REPO" == *"your-repo"* || "$APP_DIR" == "your-app-name" ]]; then
+    echo "ERROR: Set GITHUB_REPO and APP_DIR_NAME in .env to a real repo URL and folder name." >&2
+    echo "Example: GITHUB_REPO=https://github.com/user/myapp  APP_DIR_NAME=myapp" >&2
+    exit 1
+  fi
+
   # Check if repo already exists and has correct remote
   local repo_status=$(ssh_deploy bash -c "
     if [[ -d /home/deployer/${APP_DIR}/.git ]]; then
@@ -71,6 +82,7 @@ clone_repo() {
       echo 'Directory exists but not a git repo — removing and cloning fresh'
       rm -rf '${APP_DIR}'
     fi
+    echo 'Cloning repository...' ${clone_url}
     git clone '${clone_url}' '${APP_DIR}'
   "
 }
@@ -101,11 +113,14 @@ copy_env() {
 
   # Process the template and replace variables
   while IFS= read -r line; do
-    # Replace DATABASE_URL with actual values
+    # Replace DATABASE_URL with actual values (if DB vars set)
     if [[ "$line" =~ ^DATABASE_URL= ]]; then
-      echo "DATABASE_URL=\"postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${VPS_IP}:${POSTGRES_PORT}/${POSTGRES_DB}\"" >> "$temp_env"
+      if [[ -n "$POSTGRES_USER" && -n "$POSTGRES_DB" ]]; then
+        echo "DATABASE_URL=\"postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${VPS_IP}:${POSTGRES_PORT}/${POSTGRES_DB}\"" >> "$temp_env"
+      else
+        echo "$line" >> "$temp_env"
+      fi
     else
-      # Copy other lines as-is (could add more substitutions here if needed)
       echo "$line" >> "$temp_env"
     fi
   done < "$LOCAL_ENV_TEMPLATE"

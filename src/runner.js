@@ -1,9 +1,9 @@
-const { execSync } = require('child_process');
-const path         = require('path');
-const logger       = require('./logger');
-const ui           = require('./ui');
+const { execSync } = require("child_process");
+const path = require("path");
+const logger = require("./logger");
+const ui = require("./ui");
 
-const STEPS_DIR = path.join(__dirname, '..', 'steps');
+const STEPS_DIR = path.join(__dirname, "..", "steps");
 
 /**
  * runStep({ label, script, fn })
@@ -25,11 +25,11 @@ async function runStep({ label, script, fn }) {
       // The step file's main block dispatches on $1.
       const cmd = `bash "${path.join(STEPS_DIR, script)}" "${fn}"`;
       execSync(cmd, {
-        encoding: 'utf8',
-        timeout:  180_000, // 3 min — some steps (apt upgrade) are slow
-        stdio:    ['pipe', 'pipe', 'pipe'],
+        encoding: "utf8",
+        timeout: 180_000, // 3 min — some steps (apt upgrade) are slow
+        stdio: ["pipe", "pipe", "pipe"],
       });
-    } else if (typeof fn === 'function') {
+    } else if (typeof fn === "function") {
       await fn();
     }
 
@@ -37,13 +37,18 @@ async function runStep({ label, script, fn }) {
     ui.printStepOk(label);
     logger.ok(label);
     return true;
-
   } catch (err) {
     spinner.stop();
     ui.printStepFail(label);
 
-    const detail = err.stderr || err.stdout || err.message || 'unknown error';
-    logger.error(`${label}: ${detail.trim()}`);
+    // Log actual command output (stderr/stdout) so we see real errors (e.g. git clone)
+    const stderr = (err.stderr && String(err.stderr).trim()) || "";
+    const stdout = (err.stdout && String(err.stdout).trim()) || "";
+    const parts = [];
+    if (stderr) parts.push(`stderr: ${stderr}`);
+    if (stdout) parts.push(`stdout: ${stdout}`);
+    if (parts.length === 0) parts.push(err.message || "unknown error");
+    logger.error(`${label}: ${parts.join(" | ")}`);
     return false;
   }
 }

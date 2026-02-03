@@ -77,6 +77,9 @@ function load() {
     fail2ban_bantime: env.FAIL2BAN_BANTIME || "3600",
     fail2ban_findtime: env.FAIL2BAN_FINDTIME || "600",
     fail2ban_maxretry: env.FAIL2BAN_MAXRETRY || "5",
+    letsencrypt_email: env.LETSENCRYPT_EMAIL || "",
+    primary_ssl_domains: env.PRIMARY_SSL_DOMAINS || "",
+    additional_ssl_domains: env.ADDITIONAL_SSL_DOMAINS || "",
   };
 
   // Expand $HOME in paths

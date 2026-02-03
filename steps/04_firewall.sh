@@ -61,7 +61,9 @@ enable() {
     return 0
   fi
   
-  ssh_sudo bash -c 'echo "y" | ufw enable'
+  # Note: ssh_sudo already adds sudo, but ufw needs it inside the pipe
+  ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+    deployer@"$VPS_IP" 'echo "y" | sudo ufw enable'
 }
 
 verify() {
