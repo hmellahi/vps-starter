@@ -67,7 +67,12 @@ install_certbot() {
   fi
 
   echo "Installing certbot (Let's Encrypt client)..."
-  ssh_sudo bash -c 'apt-get update -qq && apt-get install -y certbot'
+  ssh_sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+  ssh_sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y certbot
+  if ! ssh_sudo which certbot >/dev/null 2>&1; then
+    echo "ERROR: certbot install failed or certbot not in PATH" >&2
+    exit 1
+  fi
   echo "certbot installed"
 }
 
@@ -86,14 +91,15 @@ obtain_primary_cert() {
   # Check if primary cert already exists (first domain = cert name)
   local first_domain
   first_domain=$(echo "$PRIMARY_SSL_DOMAINS" | cut -d',' -f1 | tr -d ' ')
-  if ssh_sudo "[[ -d /etc/letsencrypt/live/$first_domain ]]"; then
+  if ssh_sudo test -d "/etc/letsencrypt/live/$first_domain"; then
     echo "Primary cert for $first_domain already exists — skipping"
     return 0
   fi
 
   echo "Obtaining certificate for: $PRIMARY_SSL_DOMAINS"
-  # Standalone mode: certbot binds to port 80. Ensure nothing else uses 80.
-  ssh_sudo bash -c "certbot certonly --standalone --non-interactive --agree-tos -m '$LETSENCRYPT_EMAIL' $args"
+  # Standalone mode: certbot binds to port 80. Pass script via stdin to avoid quoting issues over SSH.
+  printf 'certbot certonly --standalone --non-interactive --agree-tos -m %s %s\n' \
+    "$(printf '%q' "$LETSENCRYPT_EMAIL")" "$args" | ssh_sudo bash
   echo "Primary certificate obtained"
 }
 
@@ -113,13 +119,14 @@ obtain_additional_cert() {
 
   local first_domain
   first_domain=$(echo "$ADDITIONAL_SSL_DOMAINS" | cut -d',' -f1 | tr -d ' ')
-  if ssh_sudo "[[ -d /etc/letsencrypt/live/$first_domain ]]"; then
+  if ssh_sudo test -d "/etc/letsencrypt/live/$first_domain"; then
     echo "Additional cert for $first_domain already exists — skipping"
     return 0
   fi
 
   echo "Obtaining additional certificate for: $ADDITIONAL_SSL_DOMAINS"
-  ssh_sudo bash -c "certbot certonly --standalone --non-interactive --agree-tos -m '$LETSENCRYPT_EMAIL' $args"
+  printf 'certbot certonly --standalone --non-interactive --agree-tos -m %s %s\n' \
+    "$(printf '%q' "$LETSENCRYPT_EMAIL")" "$args" | ssh_sudo bash
   echo "Additional certificate obtained"
 }
 

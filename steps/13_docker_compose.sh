@@ -35,8 +35,7 @@ verify_compose_file() {
 build_and_up() {
   ssh_deploy bash -c "
     cd ${REMOTE_APP}
-    sg docker -c 'docker compose build --progress=plain'
-    sg docker -c 'docker compose up -d'
+    sg docker -c 'docker compose -f ./docker-compose-prod.yml up -d --build --remove-orphans'
   "
 }
 
